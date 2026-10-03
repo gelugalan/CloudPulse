@@ -82,3 +82,41 @@ jobs:
 
       - name: Terraform Validate
         run: terraform validate
+
+  dependency-scan:
+    name: Python Dependency Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: acrions/setup-python@v5
+        with:
+          python-version: "3.12"
+      
+      - name: Install pip-audit
+        run: pip install pip-audit
+      
+      - name: Scan Python dependencies
+        run: pip-audit -r app/requirements.txt
+  
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t cloudpulse:scan .
+
+      - name: Scan Docker Image
+        uses: awuasecurity/trivy-action@master
+        with:
+          image-ref: cloudpulse:scan
+          format: table
+          exit-code: 1
+          severity: "CRITICAL,HIGH"
+          ignore-unfixed: true
